@@ -4,6 +4,8 @@ import uuid
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
+from django.utils import timezone
+
 # Create your models here.
 
 def validateEmail( email ):
@@ -18,10 +20,13 @@ class Term(models.Model):
         Описание модели Семестр
     """
     number = models.AutoField(blank=False, primary_key=True)
-    #groups = models.ManyToManyField(Group)
+    start_date = models.DateField(default=timezone.now, help_text="Выберете дату начала")
+    end_date = models.DateField(default=timezone.now, help_text="Выберете дату конца семестра")
+    
+    isCurrentTerm = models.BooleanField(help_text="Это текущий семестр?")
     
     def __str__(self):
-        return self.number
+        return "{0}".format(self.number)
 
 
 
@@ -68,7 +73,7 @@ class Student(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name + self.last_name + self.patronymic
+        return self.last_name+ " " + self.name + " " + self.patronymic
 
 
 
@@ -94,7 +99,7 @@ class SubjectInstance(models.Model):
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     
     def __str__(self):
-        return "{0} {1}".format(self.term.name,self.term.subject)
+        return "{0} сем. {1}".format(self.term.number,self.subject.name)
 
 
 
@@ -110,10 +115,10 @@ class Lecturer(models.Model):
     email = models.EmailField(null=True, blank=True, validators=[validateEmail], help_text="Пожалуйста, введите почту")
     password = models.TextField(null=True, blank=True, help_text="Пожалуйста, введите пароль")
     
-    subject_instances = models.ManyToManyField(SubjectInstance)
+    subject_instances = models.ManyToManyField(SubjectInstance,blank=True)
     
     def __str__(self):
-        return self.name + self.last_name + self.patronymic
+        return self.last_name+ " " + self.name + " " + self.patronymic
 
 
 
@@ -123,11 +128,13 @@ class Task(models.Model):
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, help_text="Уникальный ID для семестра")
     name = models.TextField(help_text="Пожалуйста, введите название задания")
+    bref = models.TextField(null=True, blank=True, help_text="Пожалуйста, введите краткое описание задания")
+    
     worth = models.IntegerField(help_text="Пожалуйста, ввдеите ценность задания")
     b_max = models.IntegerField(help_text="Пожалуйста, введите максимальный балл по заданию")
+    
     date_of_issue = models.DateField(help_text="Пожалуйста, выберете дату выдачи задания")
     deadline = models.DateField(help_text="Пожалуйста, выберете крайнюю дату задания")
-    bref = models.TextField(null=True, blank=True, help_text="Пожалуйста, введите краткое описание задания")
     
     KINDS = [ 
         ("main", "основная"),
@@ -159,5 +166,5 @@ class Mark(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, help_text="Пожалуйста, выберете задание")
     
     def __str__(self):
-        return self.number
+        return "b: {0}".format(self.number)
         
